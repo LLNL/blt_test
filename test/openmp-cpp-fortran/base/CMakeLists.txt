@@ -27,6 +27,7 @@ if (NOT BLT_LOADED)
 endif()
 
 blt_export_tpl_targets(EXPORT openmp-cpp-fortran-targets NAMESPACE blt)
+blt_install_tpl_setups(DESTINATION lib/cmake/)
 install(EXPORT openmp-cpp-fortran-targets
     DESTINATION  lib/cmake/openmp-cpp-fortran)
 
