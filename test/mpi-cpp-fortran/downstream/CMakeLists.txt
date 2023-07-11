@@ -19,7 +19,7 @@ set_source_files_properties(
     PROPERTIES
     Fortran_FORMAT FREE)
 
-get_target_property(mpi_flags blt::mpi INTERFACE_COMPILE_OPTIONS)
+get_target_property(mpi_flags mpi INTERFACE_COMPILE_OPTIONS)
 
 # The below print statement should emit the generator expression for the OMP flags,
 # which is necessary because the flag is CPP and Fortran compiler dependent.

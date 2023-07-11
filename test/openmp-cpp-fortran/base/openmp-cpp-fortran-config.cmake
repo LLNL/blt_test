@@ -1,5 +1,2 @@
 include("${CMAKE_CURRENT_LIST_DIR}/openmp-cpp-fortran-targets.cmake")
-include("${CMAKE_CURRENT_LIST_DIR}/../BLTOptions.cmake")
-include("${CMAKE_CURRENT_LIST_DIR}/../BLTPrivateMacros.cmake")
-include("${CMAKE_CURRENT_LIST_DIR}/../BLTMacros.cmake")
-include("${CMAKE_CURRENT_LIST_DIR}/../SetupOpenMP.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../SetupThirdPartyTargetsDownstream.cmake")

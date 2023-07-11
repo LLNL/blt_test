@@ -26,11 +26,7 @@ if (NOT BLT_LOADED)
   include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 endif()
 
-blt_export_tpl_targets(EXPORT mpi-cpp-fortran-targets NAMESPACE blt)
 blt_install_tpl_setups(DESTINATION lib/cmake/)
-
-install(EXPORT mpi-cpp-fortran-targets
-    DESTINATION  lib/cmake/mpi-cpp-fortran)
 
 blt_add_library(
     NAME mpi-cpp-fortran

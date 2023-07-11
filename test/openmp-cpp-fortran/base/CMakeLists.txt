@@ -26,10 +26,7 @@ if (NOT BLT_LOADED)
   include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 endif()
 
-blt_export_tpl_targets(EXPORT openmp-cpp-fortran-targets NAMESPACE blt)
 blt_install_tpl_setups(DESTINATION lib/cmake/)
-install(EXPORT openmp-cpp-fortran-targets
-    DESTINATION  lib/cmake/openmp-cpp-fortran)
 
 blt_add_library(
     NAME openmp-cpp-fortran
