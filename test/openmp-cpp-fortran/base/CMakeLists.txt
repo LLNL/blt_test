@@ -4,7 +4,6 @@ project(openmp-cpp-fortran LANGUAGES CXX)
 
 set(BLT_CXX_STD c++14 CACHE STRING "")
 set(ENABLE_OPENMP On CACHE BOOL "")
-set(BLT_EXPORT_THIRDPARTY On CACHE BOOL "")
 
 if (NOT BLT_LOADED)
   if (DEFINED BLT_SOURCE_DIR)
@@ -37,10 +36,13 @@ blt_add_library(
 install(TARGETS openmp-cpp-fortran
   EXPORT openmp-cpp-fortran-targets)
 
+install(EXPORT openmp-cpp-fortran-targets
+  DESTINATION  lib/cmake/openmp-cpp-fortran)
+
 # export targets & blt targets
 install(FILES
   ${PROJECT_SOURCE_DIR}/openmp-cpp-fortran-config.cmake
   DESTINATION lib/cmake/openmp-cpp-fortran)
 
-install(EXPORT openmp-cpp-fortran-targets
-    DESTINATION  lib/cmake/openmp-cpp-fortran)
+add_executable(openmp-cpp-fortran-print openmp-cpp-fortran.cpp)
+target_link_libraries(openmp-cpp-fortran-print PUBLIC openmp-cpp-fortran)

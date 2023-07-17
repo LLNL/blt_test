@@ -17,3 +17,8 @@ void test_func()
               << std::endl;
   }
 }
+
+int main() {
+  test_func();
+  return 0;
+}
