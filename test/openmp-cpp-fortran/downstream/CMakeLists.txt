@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.14)
 
 project(openmp-cpp-fortran-user LANGUAGES CXX Fortran)
 
-set(BLT_ROOT_DIR ${base_install_dir}/lib)
 message(STATUS "${BLT_ROOT_DIR}")
 
 find_package(openmp-cpp-fortran REQUIRED 

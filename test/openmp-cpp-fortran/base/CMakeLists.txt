@@ -25,7 +25,7 @@ if (NOT BLT_LOADED)
   include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 endif()
 
-blt_install_tpl_setups(DESTINATION lib/cmake/)
+blt_install_tpl_setups(DESTINATION lib/cmake)
 
 blt_add_library(
     NAME openmp-cpp-fortran

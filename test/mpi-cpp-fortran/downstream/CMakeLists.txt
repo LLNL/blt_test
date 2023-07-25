@@ -4,9 +4,6 @@ project(mpi-cpp-fortran-user LANGUAGES CXX Fortran)
 
 message(STATUS ${base_install_dir})
 
-set(BLT_ROOT_DIR ${base_install_dir}/lib)
-message(STATUS "${BLT_ROOT_DIR}")
-
 find_package(mpi-cpp-fortran REQUIRED
              NO_DEFAULT_PATH
              PATHS ${base_install_dir}/lib/cmake/mpi-cpp-fortran)
