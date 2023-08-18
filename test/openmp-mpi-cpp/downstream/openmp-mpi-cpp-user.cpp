@@ -20,6 +20,7 @@ int main() {
     printf("Hello world from processor %s, rank %d out of %d processors\n",
            processor_name, world_rank, world_size);
 
+    // Call test_func() from the base library.
     test_func();
 
     // Finalize the MPI environment.

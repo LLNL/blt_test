@@ -2,13 +2,14 @@ cmake_minimum_required(VERSION 3.14)
 
 project(openmp-cpp-fortran-user LANGUAGES CXX Fortran)
 
-message(STATUS "${BLT_ROOT_DIR}")
-
+# Calling find_package sets up the TPL targets needed by the project
+# in its argument.
 find_package(openmp-cpp-fortran REQUIRED 
              NO_DEFAULT_PATH
              PATHS ${base_install_dir}/lib/cmake/openmp-cpp-fortran)
 
 add_executable(openmp-cpp-fortran-user openmp-cpp-fortran-user.F)
+
 target_link_libraries(openmp-cpp-fortran-user PUBLIC openmp-cpp-fortran)
 
 set_source_files_properties(
@@ -17,6 +18,13 @@ set_source_files_properties(
     Fortran_FORMAT FREE)
 
 get_target_property(imported_omp_flags openmp INTERFACE_COMPILE_OPTIONS)
+
+SET(expected_omp_flags $<$<NOT:$<COMPILE_LANGUAGE:Fortran>>:-fopenmp=libomp>;$<$<COMPILE_LANGUAGE:Fortran>:-fopenmp>)
+
 # The below print statement should emit the generator expression for the OMP flags,
 # which is necessary because the flag is CPP and Fortran compiler dependent.
-message(STATUS "${imported_omp_flags}")
+if (NOT "${imported_omp_flags}" STREQUAL "${expected_omp_flags}")
+    message(FATAL_ERROR "Expected generator expression ${imported_omp_flags} but got ${expected_omp_flags}.\n"
+                        "If the compile flag generator expression inside SetupOpenMP.cmake was changed, please"
+                        "update this test.  Otherwise, this test has failed.")
+endif()

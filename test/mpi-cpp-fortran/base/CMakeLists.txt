@@ -5,38 +5,26 @@ project(mpi-cpp-fortran LANGUAGES CXX)
 set(BLT_CXX_STD c++14 CACHE STRING "")
 set(ENABLE_MPI On CACHE BOOL "")
 
+# Load BLT
 if (NOT BLT_LOADED)
-  if (DEFINED BLT_SOURCE_DIR)
-    if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
-      message(FATAL_ERROR "Given BLT_SOURCE_DIR does not contain SetupBLT.cmake")
-    endif()
-  else ()
-    set (BLT_SOURCE_DIR ${PROJECT_SOURCE_DIR}/../../../blt CACHE PATH "")
-
-    if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
-      message(FATAL_ERROR "\
-      The BLT submodule is not present. \
-      If in git repository run the following two commands:\n \
-      git submodule init\n \
-      git submodule update")
-    endif ()
-  endif ()
-
-  include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
+  include(../../cmake/FindBLT.cmake)
 endif()
 
-blt_install_tpl_setups(DESTINATION lib/cmake/)
+# Add third-party library setup files to the project's installation
+# directory.
+blt_install_tpl_setups(DESTINATION lib/cmake/${PROJECT_NAME})
 
 blt_add_library(
     NAME mpi-cpp-fortran
     SOURCES mpi-cpp-fortran.cpp
     DEPENDS_ON mpi)
 
-# install library
+# Install the header along with the necessary cmake files.
 install(TARGETS mpi-cpp-fortran
   EXPORT mpi-cpp-fortran-targets)
 
-# export targets & blt targets
+# Install the *-config.cmake file, which will include `BLTSetupTargets` 
+# when a downstream project calls `find_package` on this library.
 install(FILES
   ${PROJECT_SOURCE_DIR}/mpi-cpp-fortran-config.cmake
   DESTINATION lib/cmake/mpi-cpp-fortran)

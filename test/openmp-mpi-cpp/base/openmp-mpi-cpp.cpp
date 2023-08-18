@@ -1,4 +1,4 @@
-#include "include/openmp-mpi-cpp.hpp"
+#include "openmp-mpi-cpp.hpp"
 
 void test_func()
 {
