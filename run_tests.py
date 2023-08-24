@@ -33,6 +33,37 @@ def sexe(cmd, ret_output=False, echo=False):
     else:
         return subprocess.call(cmd, shell=True)
 
+def cmake_build_project(path_to_test: string, is_base: bool):
+    base_or_downstream = "base" if is_base else "downstream"
+    install_flag = "-DCMAKE_INSTALL_PREFIX" if is_base else "-Dbase_install_dir"
+
+    build_path = os.path.join(path_to_test, base_or_downstream, "build")
+    install_path = os.path.join(path_to_test, "..", "tmp_install_dir")
+
+    cmake_command = "cmake -B {0} -S {1} {2}={3}".format(
+                            build_path, path_to_test, install_flag, install_path)
+    build_command = "cmake --build {0}".format(build_path)
+    install_command = "cmake --install {0}".format(build_path)
+    # cmake, build and install the base project.
+    code, err = sexe(cmake_command)
+    if code:
+        return code, err
+    code, err = sexe(build_command)
+    if code:
+        return code, err
+    if (is_base):
+        code, err = sexe(install_command)
+        if code:
+            return code, err   
+
+def run_test(path_to_test: string, path_to_yaml: string):
+    """ Run test, using a yaml to specify CMake arguments """
+    with open(path_to_yaml, 'r') as stream:
+        test_yaml = yaml.safe_load(stream)
+    # CMake, Build and install base
+    cmake_build_project(path_to_test, True)
+    # CMake, build downstream
+    cmake_build_project(path_to_test, False)
 
 def parse_args():
     "Parses args from command line"
