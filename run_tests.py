@@ -46,6 +46,9 @@ def cmake_build_project(path_to_test: string, path_to_blt: string, host_config: 
     # If a downstream project is being built, feed CMake the base install path.  
     cmake_command = "cmake -B {0} -S {1} {2}={3} {4}={5}".format(
                             build_path, source_path, install_flag, install_path, blt_path_flag, path_to_blt)
+    if len(host_config) > 0:
+        cmake_command += " -C {0}".format(host_config)
+        
     build_command = "cmake --build {0}".format(build_path)
     install_command = "cmake --install {0}".format(build_path)
     # cmake, build and install the base project.
@@ -111,6 +114,10 @@ def parse_args():
     
     if not args["blt-source-dir"]:
         print("[ERROR: Required command line argument, 'blt-source-dir', was not provided.]")
+        return None
+
+    if len(args["host-config"]) > 0 and not os.path.exists(args["host-config"]):
+        print("ERROR: Host config file {0} specified, but file does not exist.".format(args["host-config"]))
         return None
 
     # Pretty print given args
