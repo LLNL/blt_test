@@ -7,7 +7,7 @@ set(ENABLE_OPENMP On CACHE BOOL "")
 
 # Load BLT
 if (NOT BLT_LOADED)
-  include(../../cmake/FindBLT.cmake)
+  include(${PATH_TO_BLT}/SetupBLT.cmake)
 endif()
 
 # Add third-party library setup files to the project's installation

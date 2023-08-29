@@ -11,6 +11,7 @@ import subprocess
 import glob
 import re
 import argparse
+import string
 
 from functools import partial
 
@@ -18,30 +19,33 @@ from functools import partial
 # order.
 print = partial(print, flush=True)
 
-def sexe(cmd, ret_output=False, echo=False):
+def sexe(cmd):
     """ Helper for executing shell commands. """
-    if echo:
-        print("[exe: {0}]".format(cmd))
-    if ret_output:
-        p = subprocess.Popen(cmd,
-                             shell=True,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT)
-        out = p.communicate()[0]
-        out = out.decode('utf8')
-        return p.returncode, out
-    else:
-        return subprocess.call(cmd, shell=True)
+    p = subprocess.Popen(cmd,
+                            shell=True,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    out = p.communicate()[0]
+    out = out.decode('utf8')
+    return p.returncode, out
 
-def cmake_build_project(path_to_test: string, is_base: bool):
+def cmake_build_project(path_to_test: string, path_to_blt: string, host_config: string, is_base: bool):
     base_or_downstream = "base" if is_base else "downstream"
     install_flag = "-DCMAKE_INSTALL_PREFIX" if is_base else "-Dbase_install_dir"
+    blt_path_flag = "-DPATH_TO_BLT"
 
-    build_path = os.path.join(path_to_test, base_or_downstream, "build")
-    install_path = os.path.join(path_to_test, "..", "tmp_install_dir")
+    # Convert these paths to absolute paths to avoid CMake seeing an incorrect relative path.
+    source_path = os.path.abspath(os.path.join(path_to_test, base_or_downstream))
+    build_path = os.path.abspath(os.path.join(source_path, "build"))
+    install_path = os.path.abspath(os.path.join(path_to_test, "tmp_install_dir"))
 
-    cmake_command = "cmake -B {0} -S {1} {2}={3}".format(
-                            build_path, path_to_test, install_flag, install_path)
+    # Projects in this directory follow a base/downstream format, where base files 
+    # are built and installed, and downstream projects are fed their install path.
+    # If a base project is being built, feed CMake the path to install the built
+    # project.
+    # If a downstream project is being built, feed CMake the base install path.  
+    cmake_command = "cmake -B {0} -S {1} {2}={3} {4}={5}".format(
+                            build_path, source_path, install_flag, install_path, blt_path_flag, path_to_blt)
     build_command = "cmake --build {0}".format(build_path)
     install_command = "cmake --install {0}".format(build_path)
     # cmake, build and install the base project.
@@ -51,19 +55,42 @@ def cmake_build_project(path_to_test: string, is_base: bool):
     code, err = sexe(build_command)
     if code:
         return code, err
-    if (is_base):
+    if is_base:
         code, err = sexe(install_command)
         if code:
-            return code, err   
+            return code, err
 
-def run_test(path_to_test: string, path_to_yaml: string):
+    return 0, "Success"
+
+# Helper to cleanup any build directories, installation directories, or any temporary caches that could 
+# create a state between runs of the tests in the repository.
+def remove_directory(path: string):
+    for p in os.listdir(path):
+        abs_path = os.path.abspath(os.path.join(path, p))
+        if os.path.isdir(abs_path):
+            remove_directory(abs_path)
+        else:
+            os.remove(abs_path)
+    if os.path.isdir(path):
+        os.rmdir(path)
+
+def run_test(path_to_test: string, path_to_blt: string, host_config: string):
     """ Run test, using a yaml to specify CMake arguments """
-    with open(path_to_yaml, 'r') as stream:
-        test_yaml = yaml.safe_load(stream)
     # CMake, Build and install base
-    cmake_build_project(path_to_test, True)
+    code, err = cmake_build_project(path_to_test, path_to_blt, host_config, True)
+    if code:
+        return code, err
     # CMake, build downstream
-    cmake_build_project(path_to_test, False)
+    code, err = cmake_build_project(path_to_test, path_to_blt, host_config, False)
+    if code:
+        return code, err
+
+    # Cleanup build and install directories
+    remove_directory(os.path.join(path_to_test, "base", "build"))
+    remove_directory(os.path.join(path_to_test, "downstream", "build"))
+    remove_directory(os.path.join(path_to_test, "tmp_install_dir"))
+    
+    return 0, "Test {0} passed".format(path_to_test)
 
 def parse_args():
     "Parses args from command line"
@@ -81,11 +108,6 @@ def parse_args():
 
     args, extra_args = parser.parse_known_args()
     args = vars(args)
-
-    # Check for required args
-    if not args["host-config"]:
-        print("[ERROR: Required command line argument, 'host-config', was not provided.]")
-        return None
     
     if not args["blt-source-dir"]:
         print("[ERROR: Required command line argument, 'blt-source-dir', was not provided.]")
@@ -107,36 +129,33 @@ def should_test_run(name, path, hostconfig):
     # for example, ENABLE_CUDA being ON, if none are present just run test always
     return run_test
 
-def run_test(name, path):
-    success = True
-    print("[Running test '{0}' in '{1}']".format(name, path))
-    #TODO: load commands to run tests from json file and run projects
-    return success
-
 def main():
     args = parse_args()
     if not args:
         return 1
     
-    # Get directories inside the tests directory
+    # Iterate through the tests, run them, and report error if encountered. 
     tests = []
-    tests_dir = os.path.abspath("tests")
-    print("[Searching for tests in '{0}']".format(tests_dir))
-    for name in os.listdir(tests_dir):
-        path = os.path.join(tests_dir, name)
-        if not os.path.isdir(path):
-            continue
-        tests.append([name, path])
-    
-    # Run all tests and remember which failed
+    path_to_blt = args["blt-source-dir"]
+    host_config = args["host-config"]
     failed_tests = []
-    for test in tests:
-        if not run_test(test[0], test[1]):
-            failed_tests.append(test[0])
+    tests_dir = os.path.relpath("test")
+    print("[Searching for tests in '{0}']".format(tests_dir))
+    for test_dir in os.listdir(tests_dir):
+        path_to_test_dir = os.path.join(tests_dir, test_dir)
+        if not os.path.isdir(path_to_test_dir):
+            print(path_to_test_dir)
+            continue
+        tests.append(test_dir)
+        status, err = run_test(path_to_test_dir, path_to_blt, host_config)
+        print(status, err)
+        if status:
+            print("Test {0} failed with error {1}".format(test_dir, err))
+            failed_tests.append(test_dir)
 
     # Print final status
     if len(failed_tests) == 0:
-        print("[Success! All test passed!]")
+        print("[Success! All tests passed!]")
     else:
         print("[ERROR: The following {0} out of {1} tests failed:".format(len(failed_tests), len(tests)))
         for name in failed_tests:

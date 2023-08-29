@@ -7,7 +7,7 @@ set(ENABLE_MPI On CACHE BOOL "")
 
 # Load BLT
 if (NOT BLT_LOADED)
-  include(../../cmake/FindBLT.cmake)
+  include(${PATH_TO_BLT}/SetupBLT.cmake)
 endif()
 
 # Calling find_package sets up the TPL targets needed by the project
