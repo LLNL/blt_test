@@ -74,7 +74,7 @@ def cmake_build_project(path_to_test: string, blt_source_dir: string, host_confi
 
     return 0, "Success"
 
-def run_test(path_to_test: string, blt_source_dir: string, host_config: string, verbose=False):
+def run_test(path_to_test: string, blt_source_dir: string, host_config: string, verbose=False, clean=False):
     """ Run test, using a yaml to specify CMake arguments """
     # CMake, Build and install base
     code, err = cmake_build_project(path_to_test, blt_source_dir, host_config, True, verbose)
@@ -86,9 +86,10 @@ def run_test(path_to_test: string, blt_source_dir: string, host_config: string, 
         return code, err
 
     # Cleanup build and install directories
-    shutil.rmtree(os.path.join(path_to_test, "base", "build"))
-    shutil.rmtree(os.path.join(path_to_test, "downstream", "build"))
-    shutil.rmtree(os.path.join(path_to_test, "tmp_install_dir"))
+    if clean:
+        shutil.rmtree(os.path.join(path_to_test, "base", "build"))
+        shutil.rmtree(os.path.join(path_to_test, "downstream", "build"))
+        shutil.rmtree(os.path.join(path_to_test, "tmp_install_dir"))
     
     return 0, "Test {0} passed".format(path_to_test)
 
@@ -118,6 +119,12 @@ def parse_args():
                       default=None,
                       dest="run-test",
                       help="Only run tests specified.")
+
+    # Specify whether to clean build and install directories
+    parser.add_argument("--clean",
+                      action='store_true',
+                      dest="clean",
+                      help="Remove build and install paths from test directories.")
 
     args, extra_args = parser.parse_known_args()
     args = vars(args)
@@ -167,6 +174,7 @@ def main():
     blt_source_dir = args["blt-source-dir"]
     host_config = args["host-config"]
     verbose = True if args["verbose"] is not None else False
+    clean = True if args["clean"] is not None else False
     failed_tests = []
     tests_dir = os.path.relpath("test")
     tests_to_run = os.listdir(tests_dir)
@@ -182,7 +190,7 @@ def main():
             print(path_to_test_dir)
             continue
         tests.append(test_dir)
-        status, err = run_test(path_to_test_dir, blt_source_dir, host_config, verbose)
+        status, err = run_test(path_to_test_dir, blt_source_dir, host_config, verbose, clean)
         print(err)
         if status:
             print("Test {0} failed with error {1}".format(test_dir, err))

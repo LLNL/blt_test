@@ -6,9 +6,7 @@ set(BLT_CXX_STD c++14 CACHE STRING "")
 set(ENABLE_MPI On CACHE BOOL "")
 
 # Load BLT
-if (NOT BLT_LOADED)
-  include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
-endif()
+include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 
 # Calling find_package sets up the TPL targets needed by the project
 # in its argument.
