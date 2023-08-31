@@ -1,3 +1,6 @@
+#include <iostream>
+#include <omp.h>
+
 #include "openmp-mpi-cpp.hpp"
 
 void test_func()
@@ -9,9 +12,8 @@ void test_func()
     int thMax = omp_get_max_threads();
 
     #pragma omp critical
-    std::cout <<"\nMy thread id is: " << thId
-              <<"\nNum threads is: " << thNum
-              <<"\nMax threads is: " << thMax
-              << std::endl;
+    std::cout << "My thread id is: " << thId << std::endl
+              << "Num threads is: " << thNum << std::endl
+              << "Max threads is: " << thMax << std::endl;
   }
 }

@@ -24,7 +24,7 @@ SET(expected_omp_flags $<$<NOT:$<COMPILE_LANGUAGE:Fortran>>:-fopenmp=libomp>;$<$
 # The below print statement should emit the generator expression for the OMP flags,
 # which is necessary because the flag is CPP and Fortran compiler dependent.
 if (NOT "${imported_omp_flags}" STREQUAL "${expected_omp_flags}")
-    message(FATAL_ERROR "Expected generator expression ${imported_omp_flags} but got ${expected_omp_flags}.\n"
-                        "If the compile flag generator expression inside SetupOpenMP.cmake was changed, please"
+    message(FATAL_ERROR "Expected generator expression ${expected_omp_flags} but got ${imported_omp_flags}.\n"
+                        "If the compile flag generator expression inside BLTSetupOpenMP.cmake was changed, please"
                         "update this test.  Otherwise, this test has failed.")
 endif()

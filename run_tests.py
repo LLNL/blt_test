@@ -12,6 +12,7 @@ import glob
 import re
 import argparse
 import string
+import shutil
 
 from functools import partial
 
@@ -29,10 +30,10 @@ def sexe(cmd):
     out = out.decode('utf8')
     return p.returncode, out
 
-def cmake_build_project(path_to_test: string, path_to_blt: string, host_config: string, is_base: bool):
+def cmake_build_project(path_to_test: string, blt_source_dir: string, host_config: string, is_base: bool, verbose=False):
     base_or_downstream = "base" if is_base else "downstream"
     install_flag = "-DCMAKE_INSTALL_PREFIX" if is_base else "-Dbase_install_dir"
-    blt_path_flag = "-DPATH_TO_BLT"
+    blt_path_flag = "-DBLT_SOURCE_DIR"
 
     # Convert these paths to absolute paths to avoid CMake seeing an incorrect relative path.
     source_path = os.path.abspath(os.path.join(path_to_test, base_or_downstream))
@@ -45,8 +46,8 @@ def cmake_build_project(path_to_test: string, path_to_blt: string, host_config: 
     # project.
     # If a downstream project is being built, feed CMake the base install path.  
     cmake_command = "cmake -B {0} -S {1} {2}={3} {4}={5}".format(
-                            build_path, source_path, install_flag, install_path, blt_path_flag, path_to_blt)
-    if len(host_config) > 0:
+                            build_path, source_path, install_flag, install_path, blt_path_flag, blt_source_dir)
+    if host_config is not None and os.path.exists(host_config):
         cmake_command += " -C {0}".format(host_config)
         
     build_command = "cmake --build {0}".format(build_path)
@@ -55,43 +56,39 @@ def cmake_build_project(path_to_test: string, path_to_blt: string, host_config: 
     code, err = sexe(cmake_command)
     if code:
         return code, err
+    elif verbose:
+        print(err)
     code, err = sexe(build_command)
     if code:
         return code, err
+    elif verbose:
+        print(err)
     if is_base:
         code, err = sexe(install_command)
+        if verbose:
+            print(err)
         if code:
             return code, err
+    elif verbose:
+        print(err)
 
     return 0, "Success"
 
-# Helper to cleanup any build directories, installation directories, or any temporary caches that could 
-# create a state between runs of the tests in the repository.
-def remove_directory(path: string):
-    for p in os.listdir(path):
-        abs_path = os.path.abspath(os.path.join(path, p))
-        if os.path.isdir(abs_path):
-            remove_directory(abs_path)
-        else:
-            os.remove(abs_path)
-    if os.path.isdir(path):
-        os.rmdir(path)
-
-def run_test(path_to_test: string, path_to_blt: string, host_config: string):
+def run_test(path_to_test: string, blt_source_dir: string, host_config: string, verbose=False):
     """ Run test, using a yaml to specify CMake arguments """
     # CMake, Build and install base
-    code, err = cmake_build_project(path_to_test, path_to_blt, host_config, True)
+    code, err = cmake_build_project(path_to_test, blt_source_dir, host_config, True, verbose)
     if code:
         return code, err
     # CMake, build downstream
-    code, err = cmake_build_project(path_to_test, path_to_blt, host_config, False)
+    code, err = cmake_build_project(path_to_test, blt_source_dir, host_config, False, verbose)
     if code:
         return code, err
 
     # Cleanup build and install directories
-    remove_directory(os.path.join(path_to_test, "base", "build"))
-    remove_directory(os.path.join(path_to_test, "downstream", "build"))
-    remove_directory(os.path.join(path_to_test, "tmp_install_dir"))
+    shutil.rmtree(os.path.join(path_to_test, "base", "build"))
+    shutil.rmtree(os.path.join(path_to_test, "downstream", "build"))
+    shutil.rmtree(os.path.join(path_to_test, "tmp_install_dir"))
     
     return 0, "Test {0} passed".format(path_to_test)
 
@@ -103,11 +100,24 @@ def parse_args():
                       default=None,
                       help="Host config file to be used by all test projects.")
 
-    # where to install
+    # Where to find BLT
     parser.add_argument("--blt-source-dir",
                       dest="blt-source-dir",
                       default=None,
                       help="Path to BLT source to be used by all test projects.")
+
+    # Verbose mode: useful for debugging.
+    parser.add_argument("--verbose",
+                      action='store_true',
+                      dest="verbose",
+                      help="Print all stdout and stderr from running tests.")
+
+    # Specify a subset of tests to run.  Useful for debugging
+    parser.add_argument("--run-test",
+                      action='append',
+                      default=None,
+                      dest="run-test",
+                      help="Only run tests specified.")
 
     args, extra_args = parser.parse_known_args()
     args = vars(args)
@@ -116,9 +126,20 @@ def parse_args():
         print("[ERROR: Required command line argument, 'blt-source-dir', was not provided.]")
         return None
 
-    if len(args["host-config"]) > 0 and not os.path.exists(args["host-config"]):
+    if args["host-config"] is not None and os.path.exists(args["host-config"]):
         print("ERROR: Host config file {0} specified, but file does not exist.".format(args["host-config"]))
         return None
+
+    if args["run-test"] is not None:
+        all_tests = set(os.listdir(os.path.relpath("test")))
+        user_tests = set(args["run-test"])
+        if not user_tests.issubset(all_tests):
+            user_tests_str = ", ".join(user_tests.difference(all_tests))
+            print("ERROR: Specified test(s) {0}, but test(s) do not exist inside the test directory.".format(user_tests_str))
+            return None
+    
+    if args["verbose"] is True:
+        print("Running tests verbosely")
 
     # Pretty print given args
     print("========================================")
@@ -143,19 +164,26 @@ def main():
     
     # Iterate through the tests, run them, and report error if encountered. 
     tests = []
-    path_to_blt = args["blt-source-dir"]
+    blt_source_dir = args["blt-source-dir"]
     host_config = args["host-config"]
+    verbose = True if args["verbose"] is not None else False
     failed_tests = []
     tests_dir = os.path.relpath("test")
-    print("[Searching for tests in '{0}']".format(tests_dir))
-    for test_dir in os.listdir(tests_dir):
+    tests_to_run = os.listdir(tests_dir)
+    # Run only a subset of tests if specified.
+    if args["run-test"] is not None:
+        tests_to_run = args["run-test"]
+
+    print("Running tests {0}".format(", ".join(tests_to_run)))
+    
+    for test_dir in tests_to_run:
         path_to_test_dir = os.path.join(tests_dir, test_dir)
         if not os.path.isdir(path_to_test_dir):
             print(path_to_test_dir)
             continue
         tests.append(test_dir)
-        status, err = run_test(path_to_test_dir, path_to_blt, host_config)
-        print(status, err)
+        status, err = run_test(path_to_test_dir, blt_source_dir, host_config, verbose)
+        print(err)
         if status:
             print("Test {0} failed with error {1}".format(test_dir, err))
             failed_tests.append(test_dir)
