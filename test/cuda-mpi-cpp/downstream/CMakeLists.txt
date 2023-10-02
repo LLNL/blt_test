@@ -28,7 +28,6 @@ if (NOT TARGET mpi)
 endif()
 
 get_target_property(compile_flags mpi INTERFACE_COMPILE_OPTIONS)
-message(STATUS "KEYWORD ${compile_flags}")
 
 blt_add_library(
     NAME cuda-mpi-cpp-user

@@ -45,7 +45,7 @@ def cmake_build_project(path_to_test: string, blt_source_dir: string, host_confi
     # If a base project is being built, feed CMake the path to install the built
     # project.
     # If a downstream project is being built, feed CMake the base install path.  
-    cmake_command = "cmake -B {0} -S {1} {2}={3} {4}={5}".format(
+    cmake_command = "cmake -DENABLE_GTEST=Off -B {0} -S {1} {2}={3} {4}={5}".format(
                             build_path, source_path, install_flag, install_path, blt_path_flag, blt_source_dir)
     if host_config is not None and os.path.exists(host_config):
         cmake_command += " -C {0}".format(host_config)
@@ -74,22 +74,27 @@ def cmake_build_project(path_to_test: string, blt_source_dir: string, host_confi
 
     return 0, "Success"
 
+def clean_helper(path_to_test: string):
+    shutil.rmtree(os.path.join(path_to_test, "base", "build"))
+    shutil.rmtree(os.path.join(path_to_test, "downstream", "build"))
+    shutil.rmtree(os.path.join(path_to_test, "tmp_install_dir"))
+
 def run_test(path_to_test: string, blt_source_dir: string, host_config: string, verbose=False, clean=False):
     """ Run test, using a yaml to specify CMake arguments """
     # CMake, Build and install base
     code, err = cmake_build_project(path_to_test, blt_source_dir, host_config, True, verbose)
     if code:
+        if clean:
+            shutil.rmtree(os.path.join(path_to_test, "base", "build"))
         return code, err
     # CMake, build downstream
     code, err = cmake_build_project(path_to_test, blt_source_dir, host_config, False, verbose)
+
+    if clean:
+        clean_helper(path_to_test)
+
     if code:
         return code, err
-
-    # Cleanup build and install directories
-    if clean:
-        shutil.rmtree(os.path.join(path_to_test, "base", "build"))
-        shutil.rmtree(os.path.join(path_to_test, "downstream", "build"))
-        shutil.rmtree(os.path.join(path_to_test, "tmp_install_dir"))
     
     return 0, "Test {0} passed".format(path_to_test)
 
@@ -123,7 +128,6 @@ def parse_args():
     # Specify whether to clean build and install directories
     parser.add_argument("--clean",
                       action='store_true',
-                      dest="clean",
                       help="Remove build and install paths from test directories.")
 
     args, extra_args = parser.parse_known_args()
@@ -133,7 +137,7 @@ def parse_args():
         print("[ERROR: Required command line argument, 'blt-source-dir', was not provided.]")
         return None
 
-    if args["host-config"] is not None and os.path.exists(args["host-config"]):
+    if args["host-config"] is not None and not os.path.exists(args["host-config"]):
         print("ERROR: Host config file {0} specified, but file does not exist.".format(args["host-config"]))
         return None
 
@@ -173,8 +177,9 @@ def main():
     tests = []
     blt_source_dir = args["blt-source-dir"]
     host_config = args["host-config"]
-    verbose = True if args["verbose"] is not None else False
-    clean = True if args["clean"] is not None else False
+    verbose = args["verbose"]
+    clean = args["clean"]
+
     failed_tests = []
     tests_dir = os.path.relpath("test")
     tests_to_run = os.listdir(tests_dir)
