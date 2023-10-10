@@ -19,15 +19,9 @@
 #------------------------------------------------------------------------------
 
 set(BLT_CXX_STD "c++14" CACHE STRING "")
-set(CLANG_CUDA_ARCH "sm_70")
-set(CLANG_HOME "/usr/tce/packages/clang/clang-ibm-15.0.6")
+set(CLANG_HOME "/usr/tce/packages/clang/clang-16.0.6")
 set(CMAKE_C_COMPILER   "${CLANG_HOME}/bin/clang" CACHE PATH "")
 set(CMAKE_CXX_COMPILER "${CLANG_HOME}/bin/clang++" CACHE PATH "")
-
-# Disable Fortran
-set(ENABLE_FORTRAN OFF CACHE BOOL "")
-# Disable MPI
-set(ENABLE_MPI OFF CACHE BOOL "")
 
 #------------------------------------------------------------------------------
 # CUDA support
@@ -41,5 +35,3 @@ set(CMAKE_CUDA_HOST_COMPILER "${CMAKE_CXX_COMPILER}" CACHE PATH "")
 
 set(CMAKE_CUDA_ARCHITECTURES "70" CACHE STRING "")
 set(CMAKE_CUDA_FLAGS "-restrict --expt-extended-lambda -G" CACHE STRING "")
-
-set(CUDA_SEPARABLE_COMPILATION ON CACHE BOOL "" )

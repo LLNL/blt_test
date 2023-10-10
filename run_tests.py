@@ -120,10 +120,10 @@ def parse_args():
 
     # Specify a subset of tests to run.  Useful for debugging
     parser.add_argument("--run-test",
-                      action='append',
                       default=None,
                       dest="run-test",
-                      help="Only run tests specified.")
+                      help="Comma delimited list of tests to run.  Test names must be a subset of the "
+                            "list of directories inside test. Only run tests specified.")
 
     # Specify whether to clean build and install directories
     parser.add_argument("--clean",
@@ -143,7 +143,7 @@ def parse_args():
 
     if args["run-test"] is not None:
         all_tests = set(os.listdir(os.path.relpath("test")))
-        user_tests = set(args["run-test"])
+        user_tests = set(args["run-test"].split(","))
         if not user_tests.issubset(all_tests):
             user_tests_str = ", ".join(user_tests.difference(all_tests))
             print("ERROR: Specified test(s) {0}, but test(s) do not exist inside the test directory.".format(user_tests_str))
@@ -185,7 +185,7 @@ def main():
     tests_to_run = os.listdir(tests_dir)
     # Run only a subset of tests if specified.
     if args["run-test"] is not None:
-        tests_to_run = args["run-test"]
+        tests_to_run = args["run-test"].split(",")
 
     print("Running tests {0}".format(", ".join(tests_to_run)))
     

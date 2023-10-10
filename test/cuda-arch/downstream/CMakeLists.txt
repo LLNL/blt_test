@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 project(cuda-clang-cpp-user LANGUAGES CXX)
 
 set(ENABLE_CLANG_CUDA On CACHE BOOL "")
-set(CLANG_CUDA_ARCH "sm_70" CACHE STRING "")
+set(BLT_CLANG_CUDA_ARCH "sm_70" CACHE STRING "")
 
 set(CMAKE_CUDA_SEPARABLE_COMPILATION On CACHE BOOL "")
 
@@ -24,16 +24,26 @@ if (NOT TARGET cuda)
 endif()
 
 get_target_property(cuda_compile_flags cuda INTERFACE_COMPILE_OPTIONS)
+
+message(STATUS "CUDA target created with compile flags set to: ${cuda_compile_flags}")
+
 string(FIND "${cuda_compile_flags}" "-x" clang_cuda_flag)
 string(FIND "${cuda_compile_flags}" "${CLANG_CUDA_ARCH}" clang_cuda_arch)
 string(FIND "${cuda_compile_flags}" "/usr/tce/packages/cuda/cuda-11.1.0" expected_cuda_toolkit_dir)
-if (clang_cuda_flag EQUAL -1 OR clang_cuda_arch EQUAL -1)
-    message(FATAL_ERROR "Expected downstream project config flags to override upstream project's.")
+
+if (clang_cuda_flag EQUAL -1)
+    message(FATAL_ERROR "Expected downstream project clang cuda config flags to override upstream project's.")
 endif()
+
+if(clang_cuda_arch EQUAL -1)
+  message(FATAL_ERROR "Expected downstream project clang cuda arch config flags to override upstream project's.")
+endif()
+
 if (expected_cuda_toolkit_dir EQUAL -1)
     message(FATAL_ERROR "Expected downstream project config flags to inherit upstream project's when to alternative is specified.")
 endif()
 
+# TODO(bowen) Adding this executable leads to a linkage error.  Figure out why an re-enable it.
 blt_add_executable(
     NAME hello-cuda
     SOURCES cuda-clang-cpp-user.cpp
