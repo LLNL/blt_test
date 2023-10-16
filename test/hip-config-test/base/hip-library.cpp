@@ -1,6 +1,6 @@
 #include <iostream>
 #include <hip/hip_runtime.h>
-#include "hip.hpp"
+#include "hip-library.hpp"
 
 __global__ void kernel() {
   int tidx = hipThreadIdx_x;

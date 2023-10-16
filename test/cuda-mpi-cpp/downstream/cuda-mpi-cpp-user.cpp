@@ -1,7 +1,7 @@
 #include <iostream>
 #include <mpi.h>
 
-#include "../tmp_install_dir/include/cuda-mpi-cpp.cuh"
+#include "cuda-mpi-cpp.cuh"
 
 int main() {
     MPI_Init(nullptr, nullptr);

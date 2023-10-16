@@ -4,14 +4,7 @@
 # SPDX-License-Identifier: (BSD-3-Clause)
 
 #------------------------------------------------------------------------------
-# Example host-config file for the blue_os cluster at LLNL, specifically Lassen
-#------------------------------------------------------------------------------
-#
-# This file provides CMake with paths / details for:
-#  C/C++:   Clang with GCC 8.3.1 toolchain
-#  Cuda
-#  MPI
-# 
+# Host-config file for executing tests of BLT's configuration of CUDA targets on Lassen.
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -26,7 +19,6 @@ set(CMAKE_CXX_COMPILER "${CLANG_HOME}/bin/clang++" CACHE PATH "")
 #------------------------------------------------------------------------------
 # CUDA support
 #------------------------------------------------------------------------------
-# _blt_tutorial_cuda_config_start
 set(ENABLE_CUDA ON CACHE BOOL "")
 
 set(CUDA_TOOLKIT_ROOT_DIR "/usr/tce/packages/cuda/cuda-11.1.0" CACHE PATH "")

@@ -29,13 +29,10 @@ endif()
 
 get_target_property(compile_flags mpi INTERFACE_COMPILE_OPTIONS)
 
-blt_add_library(
-    NAME cuda-mpi-cpp-user
-    SOURCES cuda-mpi-cpp-user.cpp
-    DEPENDS_ON mpi cuda-mpi-cpp)
-
 blt_add_executable(
     NAME hello-mpi-cuda
     SOURCES cuda-mpi-cpp-user.cpp
-    DEPENDS_ON cuda-mpi-cpp-user
+    DEPENDS_ON mpi cuda-mpi-cpp
 )
+
+target_include_directories(hello-mpi-cuda PUBLIC ${base_install_dir}/include)

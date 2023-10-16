@@ -6,10 +6,6 @@ set(ENABLE_MPI OFF)
 set(ENABLE_FORTRAN OFF)
 set(ENABLE_HIP ON)
 
-# This test will verify that CUDA compile flags that are configurable by the user
-# (these are the only two, besides the dir for the CUDA toolkit) will correctly be
-# passed down to downstream projects.
-
 # Load BLT
 include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 

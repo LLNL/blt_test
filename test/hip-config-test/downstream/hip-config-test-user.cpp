@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "../tmp_install_dir/include/hip.hpp"
+#include "hip-library.hpp"
 
 int main() {
     std::cout << "Hello from downstream project.  Running hip hello world: " << std::endl;
