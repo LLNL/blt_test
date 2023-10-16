@@ -1,14 +1,17 @@
 #include <stdio.h>
+#include <string>
 #include <cuda.h>
 #include "cuda-clang-cpp.cuh"
 
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
 __global__ void kernel() {
-  int tidx = threadIdx.x;
-  int bidx = blockIdx.x;
-  printf("Hello from block %u, thread %u\n", bidx, tidx);
+  const char arch[] = STR(__CUDA_ARCH__);
+  printf("Current arch =  %s", arch);
 }
 
 void run_kernel() {
-  kernel<<<4, 4>>>();
+  kernel<<<1, 1>>>();
   cudaDeviceSynchronize();
 }
