@@ -16,12 +16,12 @@ blt_install_tpl_setups(DESTINATION lib/cmake/${PROJECT_NAME})
 # Add the base library with its single source file and header file.
 blt_add_library(
   NAME hip-config-test
-  SOURCES hip.cpp
-  HEADERS hip.hpp
+  SOURCES hip-library.cpp
+  HEADERS hip-library.hpp
   DEPENDS_ON blt::hip blt::hip_runtime)
 
 # Add the header file to the installation.
-install(FILES hip.hpp DESTINATION include)
+install(FILES hip-library.hpp DESTINATION include)
 
 # Install the header along with the necessary cmake files.
 install(TARGETS hip-config-test
