@@ -21,6 +21,8 @@ if (NOT TARGET cuda)
                       "downstream project configuration.")
 endif()
 
+# Check that the cuda target created during the `find_package` call contains the expected 
+# user provided flags for clang cuda.
 get_target_property(cuda_compile_flags cuda INTERFACE_COMPILE_OPTIONS)
 
 message(STATUS "CUDA target created with compile flags set to: ${cuda_compile_flags}")

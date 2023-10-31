@@ -25,7 +25,7 @@ endif()
 blt_add_executable(
     NAME hello-hip
     SOURCES hip-config-test-user.cpp
-    DEPENDS_ON blt_hip blt_hip_runtime hip-config-test
+    DEPENDS_ON hip-config-test
 )
 
 target_include_directories(hello-hip PUBLIC ${base_install_dir}/include)

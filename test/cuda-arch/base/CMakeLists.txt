@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.14)
 
 project(cuda-clang-cpp LANGUAGES CXX)
 
-set(BLT_CXX_STD c++14 CACHE STRING "")
-
 # This test will verify that CUDA compile flags that are configurable by the user
 # (these are the only two, besides the dir for the CUDA toolkit) will correctly be
 # passed down to downstream projects.
@@ -37,4 +35,3 @@ install(FILES
 
 install(EXPORT cuda-clang-cpp-targets
     DESTINATION  lib/cmake/cuda-clang-cpp)
-
