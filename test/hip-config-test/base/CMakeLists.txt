@@ -18,7 +18,7 @@ blt_add_library(
   NAME hip-config-test
   SOURCES hip-library.cpp
   HEADERS hip-library.hpp
-  DEPENDS_ON blt::hip blt::hip_runtime)
+  DEPENDS_ON blt::hip)
 
 # Add the header file to the installation.
 install(FILES hip-library.hpp DESTINATION include)
